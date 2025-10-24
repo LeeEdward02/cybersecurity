@@ -12,6 +12,7 @@ from matplotlib import rcParams
 rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
 rcParams['axes.unicode_minus'] = False
 
+
 class DataRecorder:
     """
     数据记录与可视化类

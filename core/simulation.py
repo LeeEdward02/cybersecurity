@@ -2,20 +2,22 @@
 simulation.py
 --------------
 整合所有模块（拓扑、博弈、演化）实现完整的仿真流程。
+提供抽象基类用于不同实验的仿真。
 """
 
 import random
+from abc import ABC, abstractmethod
 from core.agents import Defender, Attacker
 from core.games import PublicGoodsGame, DefenderAttackerGame
 from core.topology import NetworkTopology
 from core.evolution import fermi_update
 
 
-class CyberSecuritySimulation:
+class CyberSecuritySimulation(ABC):
     """
-    网络安全博弈仿真主类
+    网络安全博弈仿真抽象基类
     -------------------
-    负责初始化网络、运行每轮博弈、更新策略与记录数据。
+    提供通用的仿真框架，具体实验需要继承并实现抽象方法。
     """
 
     def __init__(self, N=1600, rounds=2000, r=4.0, q0=0.4, alphaA=0.0, K=0.1, topology='lattice', params=None):
@@ -30,22 +32,41 @@ class CyberSecuritySimulation:
             topology (str): 网络类型
             params (dict): 拓扑参数
         """
+        self.N = N
+        self.rounds = rounds
+        self.r = r
+        self.q0 = q0
+        self.alphaA = alphaA
+        self.K = K
+        self.topology = topology
+        self.params = params
+
+        # 初始化组件
         self.network = NetworkTopology(topology, N, params)
         self.defenders = [Defender(i, random.choice(['C', 'D'])) for i in range(N)]
         self.attacker = Attacker(q0=q0, alpha=alphaA)
         self.pgg = PublicGoodsGame(r)
         self.dag = DefenderAttackerGame()
-        self.rounds = rounds
-        self.K = K
 
+    @abstractmethod
     def run(self, recorder):
         """
-        执行完整仿真过程。
+        执行仿真过程 - 子类必须实现此方法
 
         Args:
             recorder (DataRecorder): 数据记录对象
         Returns:
             None（结果通过recorder记录）
+        """
+        pass
+
+    def run_standard_simulation(self, recorder):
+        """
+        标准仿真流程 - 默认的仿真实现
+        子类可以直接调用此方法实现标准仿真
+
+        Args:
+            recorder (DataRecorder): 数据记录对象
         """
         for t in range(self.rounds):
             # === 1. 公共物品博弈 ===

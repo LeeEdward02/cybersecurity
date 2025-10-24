@@ -7,6 +7,7 @@ evolution.py
 import math
 import random
 
+
 def fermi_update(defender_i, defender_j, K=0.1):
     """
     Fermi策略更新规则

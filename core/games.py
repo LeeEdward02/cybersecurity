@@ -8,6 +8,7 @@ games.py
 
 import random
 
+
 class PublicGoodsGame:
     """
     公共物品博弈类
@@ -79,11 +80,16 @@ class DefenderAttackerGame:
         attack = attacker.should_attack()
         invest = defender.strategy == 'C'
 
+        # 集体投资的回报这一项在PublicGoodsGame类中单独计算，并在每次博弈后直接更新
+        # 合作且被攻击
         if invest and attack:
-            return (-self.mu + self.gamma1, -self.c)
+            return -self.mu + self.gamma1, -self.c
+        # 合作且未被攻击
         elif invest and not attack:
-            return (-self.mu + self.gamma2, 0)
+            return -self.mu + self.gamma2, 0
+        # 背叛且被攻击
         elif not invest and attack:
-            return (-self.delta, self.d)
+            return -self.delta, self.d
+        # 背叛且未被攻击
         else:
-            return (0, 0)
+            return self.gamma2, 0
