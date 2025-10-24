@@ -16,7 +16,7 @@ class PublicGoodsGame:
     每个参与者可选择投资或不投资，投资者付出成本但共享收益。
     """
 
-    def __init__(self, r=3.5, cost=1.0):
+    def __init__(self, r, cost):
         """
         Args:
             r (float): 增强因子（放大公共收益）

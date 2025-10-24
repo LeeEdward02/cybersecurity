@@ -45,7 +45,7 @@ class CyberSecuritySimulation(ABC):
         self.network = NetworkTopology(topology, N, params)
         self.defenders = [Defender(i, random.choice(['C', 'D'])) for i in range(N)]
         self.attacker = Attacker(q0=q0, alpha=alphaA)
-        self.pgg = PublicGoodsGame(r)
+        self.pgg = PublicGoodsGame(r, 40)
         self.dag = DefenderAttackerGame()
 
     @abstractmethod
