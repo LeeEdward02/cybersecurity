@@ -6,6 +6,11 @@ recorder.py
 """
 
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
+
+# 设置中文字体
+rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+rcParams['axes.unicode_minus'] = False
 
 class DataRecorder:
     """
@@ -18,9 +23,13 @@ class DataRecorder:
         """
         初始化记录结构。
         """
-        self.records = {'coop_rate': [], 'attack_rate': [], 'q_history': []}
+        self.records = {'coop_rate': [],
+                        'attack_success_rate': [],
+                        'q_history': [],
+                        'defender_payoff': [],
+                        }
 
-    def record(self, coop, attack, q):
+    def record(self, coop, attack, q, payoff):
         """
         记录当前轮的关键指标。
 
@@ -28,12 +37,14 @@ class DataRecorder:
             coop (float): 合作率（合作节点数量 / 总节点数）
             attack (float): 攻击成功率
             q (float): 当前攻击概率 q(t)
+            payoff (float): 防御者总收益
         Returns:
             None
         """
         self.records['coop_rate'].append(coop)
-        self.records['attack_rate'].append(attack)
+        self.records['attack_success_rate'].append(attack)
         self.records['q_history'].append(q)
+        self.records['defender_payoff'].append(payoff)
 
     def plot(self):
         """
