@@ -16,14 +16,14 @@ class PublicGoodsGame:
     每个参与者可选择投资或不投资，投资者付出成本但共享收益。
     """
 
-    def __init__(self, r, cost):
+    def __init__(self, r, mu=40):
         """
         Args:
             r (float): 增强因子（放大公共收益）
-            cost (float): 每个合作者的投资成本
+            mu (float): 每个合作者的防御投资成本 μ
         """
         self.r = r
-        self.cost = cost
+        self.mu = mu
 
     def play(self, group):
         """
@@ -34,11 +34,11 @@ class PublicGoodsGame:
             None （直接更新各个防御者的payoff）
         """
         contributors = [a for a in group if a.strategy == 'C']
-        total = len(contributors) * self.cost
+        total = len(contributors) * self.mu
         benefit = self.r * total / len(group)
         for a in group:
             if a.strategy == 'C':
-                a.payoff += benefit - self.cost
+                a.payoff += benefit - self.mu
             else:
                 a.payoff += benefit
 
@@ -50,17 +50,15 @@ class DefenderAttackerGame:
     模拟单个防御者与攻击者之间的收益交互。
     """
 
-    def __init__(self, mu=40, gamma1=50, gamma2=10, delta=50, d=50, c=10):
+    def __init__(self, gamma1=50, gamma2=10, delta=50, d=50, c=10):
         """
         Args:
-            mu (float): 防御成本 μ
             gamma1 (float): 投资且被攻时的收益 γ1
             gamma2 (float): 投资且未被攻时的收益 γ2
             delta (float): 未投资且被攻时的损失 δ
             d (float): 攻击者成功攻击的收益
             c (float): 攻击者的攻击成本
         """
-        self.mu = mu
         self.gamma1 = gamma1
         self.gamma2 = gamma2
         self.delta = delta
@@ -80,13 +78,13 @@ class DefenderAttackerGame:
         attack = attacker.should_attack()
         invest = defender.strategy == 'C'
 
-        # 集体投资的回报这一项在PublicGoodsGame类中单独计算，并在每次博弈后直接更新
+        # 集体投资的回报和支出这一项在PublicGoodsGame类中单独计算，并在每次博弈后直接更新
         # 合作且被攻击
         if invest and attack:
-            return -self.mu + self.gamma1, -self.c
+            return self.gamma1, -self.c
         # 合作且未被攻击
         elif invest and not attack:
-            return -self.mu + self.gamma2, 0
+            return self.gamma2, 0
         # 背叛且被攻击
         elif not invest and attack:
             return -self.delta, self.d
