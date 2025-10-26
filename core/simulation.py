@@ -105,7 +105,9 @@ class CyberSecuritySimulation(ABC):
             # === 2. 攻防博弈 ===
             attack_success, total_attacks = 0, 0
             for d in self.defenders:
-                dp, ap = self.dag.play(d, self.attacker)
+                # 使用防御者的焦点组进行攻防博弈
+                focal_group = [d] + d.neighbors
+                dp, ap = self.dag.play(d, self.attacker, focal_group)
                 d.payoff += dp
                 if dp < 0:  # 攻击成功的判定
                     attack_success += 1

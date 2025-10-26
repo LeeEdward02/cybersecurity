@@ -108,7 +108,9 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
             # 每个防御者面临固定攻击概率q的攻击
             attack_success, total_attacks = 0, 0
             for d in self.defenders:
-                dp, ap = self.dag.play(d, self.attacker)
+                # 使用防御者的焦点组进行攻防博弈
+                focal_group = [d] + d.neighbors
+                dp, ap = self.dag.play(d, self.attacker, focal_group)
                 d.payoff += dp
 
                 # 记录攻击成功率
@@ -163,7 +165,7 @@ def run_exp1():
     print("研究固定攻击概率对合作演化的影响")
 
     # 可以测试不同的r值来观察临界相变
-    test_r_values = [3.1]  # 系统性变化的增强因子
+    test_r_values = [4.5]  # 系统性变化的增强因子
 
     for r in test_r_values:
         print(f"\n--- 测试 r={r} ---")
