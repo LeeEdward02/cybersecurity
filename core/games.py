@@ -103,4 +103,4 @@ class DefenderAttackerGame:
             return -self.delta, self.d
         # 未投资且未被攻击
         else:
-            return self.gamma2, 0
+            return 0, 0

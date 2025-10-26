@@ -37,7 +37,7 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
     - r：系统性变化的公共物品增强因子
     """
 
-    def __init__(self, r=4.0, q=0.4, N=1600, rounds=40000, K=0.1):
+    def __init__(self, r=4.0, q=0.4, N=1600, rounds=4000, K=0.1):
         """
         初始化无反馈实验仿真
 
@@ -110,6 +110,8 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
             for d in self.defenders:
                 # 使用防御者的焦点组进行攻防博弈
                 focal_group = [d] + d.neighbors
+                # 验证小组规模
+                assert len(focal_group) == 5, f"小组规模应为5，当前为{len(focal_group)}"
                 dp, ap = self.dag.play(d, self.attacker, focal_group)
                 d.payoff += dp
 
@@ -138,18 +140,21 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
                     fermi_update(d, neighbor, self.K)
 
             # === 5. 数据记录 ===
+            # 计算并记录平均防御者收益
+            avg_payoff = sum(d.payoff for d in self.defenders) / len(self.defenders)
             coop_rate = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
             attack_success_rate = attack_success / total_attacks if total_attacks > 0 else 0
 
-            recorder.record(coop_rate, attack_success_rate, self.attacker.q, 0)
+            recorder.record(coop_rate, attack_success_rate, self.attacker.q, avg_payoff)
 
             # === 6. 重置本轮收益 ===
+            # 重置本轮收益
             for d in self.defenders:
                 d.reset_payoff()
 
             # 进度显示
             if (t + 1) % 500 == 0:
-                print(f"  第 {t+1}/{self.rounds} 轮: 合作率={coop_rate:.3f}, 攻击成功率={attack_success_rate:.3f}")
+                print(f"  第 {t+1}/{self.rounds} 轮: 合作率={coop_rate:.3f}, 攻击成功率={attack_success_rate:.3f}, 平均收益={avg_payoff:.2f}")
 
         # 最终统计
         final_coop = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
@@ -165,7 +170,7 @@ def run_exp1():
     print("研究固定攻击概率对合作演化的影响")
 
     # 可以测试不同的r值来观察临界相变
-    test_r_values = [4.5]  # 系统性变化的增强因子
+    test_r_values = [3.8]  # 系统性变化的增强因子
 
     for r in test_r_values:
         print(f"\n--- 测试 r={r} ---")
