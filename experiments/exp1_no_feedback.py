@@ -37,7 +37,7 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
     - r：系统性变化的公共物品增强因子
     """
 
-    def __init__(self, r=4.0, q=0.4, N=1600, rounds=4000, K=0.1):
+    def __init__(self, r=4.0, q=0.4, N=1600, rounds=40000, K=0.1):
         """
         初始化无反馈实验仿真
 
@@ -94,19 +94,9 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
         for t in range(self.rounds):
             # === 1. 空间公共物品博弈 (SPGG) ===
             # 每个防御者与其4个邻居形成N(v)=5的小组
-            for node in self.network.graph.nodes:
-                neighbors = list(self.network.graph.neighbors(node))
-
-                # 对于2D格子网络，需要将元组坐标转换为防御者索引
-                if isinstance(node, tuple):
-                    # 将(x,y)坐标转换为线性索引：index = x * L + y
-                    node_idx = node[0] * self.L + node[1]
-                    neighbor_indices = [n[0] * self.L + n[1] for n in neighbors]
-                else:
-                    node_idx = node
-                    neighbor_indices = neighbors
-
-                group = [self.defenders[node_idx]] + [self.defenders[n] for n in neighbor_indices]
+            for defender in self.defenders:
+                # 使用已设置的neighbors属性获取邻居
+                group = [defender] + defender.neighbors
 
                 # 验证小组规模
                 assert len(group) == 5, f"小组规模应为5，当前为{len(group)}"
@@ -139,30 +129,11 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
 
             # === 4. 策略更新 (Fermi规则) ===
             for d in self.defenders:
-                # 随机选择一个邻居进行策略比较
-                # 对于2D格子网络，需要将防御者ID转换为坐标
-                if isinstance(d.id, int):
-                    # 将线性索引转换为坐标：(x, y) = (id // L, id % L)
-                    coord = (d.id // self.L, d.id % self.L)
-                    neighbors = list(self.network.graph.neighbors(coord))
-                    if neighbors:
-                        neighbor_coord = random.choice(neighbors)
-                        neighbor_id = neighbor_coord[0] * self.L + neighbor_coord[1]
-                    else:
-                        continue  # 如果没有邻居，跳过
-                else:
-                    # 如果ID已经是坐标形式
-                    neighbors = list(self.network.graph.neighbors(d.id))
-                    if neighbors:
-                        neighbor_coord = random.choice(neighbors)
-                        neighbor_id = neighbor_coord[0] * self.L + neighbor_coord[1]
-                    else:
-                        continue
-
-                neighbor = self.defenders[neighbor_id]
-
-                # 使用Fermi更新规则
-                fermi_update(d, neighbor, self.K)
+                # 使用已设置的neighbors属性随机选择一个邻居进行策略比较
+                if d.neighbors:  # 确保有邻居
+                    neighbor = random.choice(d.neighbors)
+                    # 使用Fermi更新规则
+                    fermi_update(d, neighbor, self.K)
 
             # === 5. 数据记录 ===
             coop_rate = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
