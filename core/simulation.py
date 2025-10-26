@@ -48,6 +48,19 @@ class CyberSecuritySimulation(ABC):
         self.pgg = PublicGoodsGame(r)
         self.dag = DefenderAttackerGame()
 
+        # 为每个防御者设置邻居节点
+        for defender in self.defenders:
+            if topology == 'lattice':
+                # 对于2D格子网络，需要将防御者的整数ID转换为坐标，然后获取邻居
+                L = int(N ** 0.5)
+                coord = (defender.id // L, defender.id % L)
+                neighbor_coords = list(self.network.graph.neighbors(coord))
+                # 将邻居坐标转换回防御者索引
+                defender.neighbors = [self.defenders[n[0] * L + n[1]] for n in neighbor_coords]
+            else:
+                # 对于其他网络拓扑，直接使用整数ID
+                defender.neighbors = [self.defenders[neighbor_id] for neighbor_id in self.network.graph.neighbors(defender.id)]
+
     @abstractmethod
     def run(self, recorder):
         """
@@ -72,13 +85,29 @@ class CyberSecuritySimulation(ABC):
             # === 1. 公共物品博弈 ===
             for node in self.network.graph.nodes:
                 neighbors = list(self.network.graph.neighbors(node))
-                group = [self.defenders[node]] + [self.defenders[n] for n in neighbors]
+
+                # 处理坐标转换
+                if self.topology == 'lattice':
+                    # 对于2D格子网络，需要将元组坐标转换为防御者索引
+                    if isinstance(node, tuple):
+                        node_idx = node[0] * int(self.N ** 0.5) + node[1]
+                        neighbor_indices = [n[0] * int(self.N ** 0.5) + n[1] for n in neighbors]
+                    else:
+                        node_idx = node
+                        neighbor_indices = neighbors
+                else:
+                    node_idx = node
+                    neighbor_indices = neighbors
+
+                group = [self.defenders[node_idx]] + [self.defenders[n] for n in neighbor_indices]
                 self.pgg.play(group)
 
             # === 2. 攻防博弈 ===
             attack_success, total_attacks = 0, 0
             for d in self.defenders:
-                dp, ap = self.dag.play(d, self.attacker)
+                # 使用防御者的焦点组进行攻防博弈
+                focal_group = [d] + d.neighbors
+                dp, ap = self.dag.play(d, self.attacker, focal_group)
                 d.payoff += dp
                 if dp < 0:  # 攻击成功的判定
                     attack_success += 1
@@ -90,8 +119,21 @@ class CyberSecuritySimulation(ABC):
 
             # === 4. 防御者策略更新 ===
             for d in self.defenders:
-                neighbor_id = random.choice(list(self.network.graph.neighbors(d.id)))
-                fermi_update(d, self.defenders[neighbor_id], self.K)
+                if self.topology == 'lattice':
+                    # 对于2D格子网络，需要将防御者的整数ID转换为坐标
+                    L = int(self.N ** 0.5)
+                    coord = (d.id // L, d.id % L)
+                    neighbor_coords = list(self.network.graph.neighbors(coord))
+                    if neighbor_coords:
+                        neighbor_coord = random.choice(neighbor_coords)
+                        neighbor_id = neighbor_coord[0] * L + neighbor_coord[1]
+                        fermi_update(d, self.defenders[neighbor_id], self.K)
+                else:
+                    # 对于其他网络拓扑，直接使用整数ID
+                    neighbor_ids = list(self.network.graph.neighbors(d.id))
+                    if neighbor_ids:
+                        neighbor_id = random.choice(neighbor_ids)
+                        fermi_update(d, self.defenders[neighbor_id], self.K)
 
             # === 5. 记录数据 ===
             coop_rate = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
