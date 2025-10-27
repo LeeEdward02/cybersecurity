@@ -29,10 +29,11 @@ class DataRecorder(ABC):
                         'attack_success_rate': [],
                         'q_history': [],
                         'defender_payoff': [],
+                        'attacker_payoff': []
                         }
 
     @abstractmethod
-    def record(self, coop, attack, q, payoff):
+    def record(self, coop, attack, q, defender_payoff, attacker_payoff=None):
         """
         记录当前轮的关键指标。
 
@@ -40,7 +41,8 @@ class DataRecorder(ABC):
             coop (float): 合作率（合作节点数量 / 总节点数）
             attack (float): 攻击成功率
             q (float): 当前攻击概率 q(t)
-            payoff (float): 防御者总收益
+            defender_payoff (float): 防御者平均收益
+            attacker_payoff (float, optional): 攻击者平均收益
         Returns:
             None
         """
@@ -63,7 +65,7 @@ class DefaultDataRecorder(DataRecorder):
     提供基础的数据记录功能，用于向后兼容。
     """
 
-    def record(self, coop, attack, q, payoff):
+    def record(self, coop, attack, q, defender_payoff, attacker_payoff=None):
         """
         记录当前轮的关键指标。
 
@@ -71,14 +73,20 @@ class DefaultDataRecorder(DataRecorder):
             coop (float): 合作率（合作节点数量 / 总节点数）
             attack (float): 攻击成功率
             q (float): 当前攻击概率 q(t)
-            payoff (float): 防御者总收益
+            defender_payoff (float): 防御者平均收益
+            attacker_payoff (float, optional): 攻击者平均收益
         Returns:
             None
         """
         self.records['coop_rate'].append(coop)
         self.records['attack_success_rate'].append(attack)
         self.records['q_history'].append(q)
-        self.records['defender_payoff'].append(payoff)
+        self.records['defender_payoff'].append(defender_payoff)
+        if attacker_payoff is not None:
+            self.records['attacker_payoff'].append(attacker_payoff)
+        else:
+            # 为了向后兼容，如果没有提供attacker_payoff，用0填充
+            self.records['attacker_payoff'].append(0)
 
     def plot(self):
         """

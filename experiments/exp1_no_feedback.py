@@ -16,6 +16,7 @@
 - 运行参数：2000轮，确保达到稳定状态
 """
 
+import random
 from core.simulation import CyberSecuritySimulation
 from core.recorder import DataRecorder
 from core.evolution import fermi_update
@@ -28,7 +29,20 @@ class Exp1DataRecorder(DataRecorder):
     为无反馈机制实验定制的数据记录和可视化实现
     """
 
-    def record(self, coop, attack, q, payoff):
+    def __init__(self):
+        """
+        初始化记录器，设置记录字段
+        """
+        super().__init__()
+        self.records = {
+            'coop_rate': [],  # 合作率
+            'attack_success_rate': [],  # 攻击成功率
+            'q_history': [],  # 攻击概率变化历史
+            'defender_payoff': [],  # 防御者平均收益
+            'attacker_payoff': []  # 攻击者平均收益
+        }
+
+    def record(self, coop, attack, q, defender_payoff, attacker_payoff):
         """
         记录当前轮的关键指标
 
@@ -36,16 +50,22 @@ class Exp1DataRecorder(DataRecorder):
             coop (float): 合作率（合作节点数量 / 总节点数）
             attack (float): 攻击成功率
             q (float): 当前攻击概率 q(t)
-            payoff (float): 防御者总收益
+            defender_payoff (float): 防御者平均收益
+            attacker_payoff (float): 攻击者平均收益
         """
         self.records['coop_rate'].append(coop)
         self.records['attack_success_rate'].append(attack)
         self.records['q_history'].append(q)
-        self.records['defender_payoff'].append(payoff)
+        self.records['defender_payoff'].append(defender_payoff)
+        self.records['attacker_payoff'].append(attacker_payoff)
 
-    def plot(self):
+    def plot(self, comparison_data=None):
         """
         绘制实验1结果曲线
+
+        Args:
+            comparison_data (dict): 可选的对比数据，格式为 {r值: Exp1DataRecorder实例}
+                              如果提供，将绘制多r值对比图表
         """
         import matplotlib.pyplot as plt
         from matplotlib import rcParams
@@ -54,44 +74,64 @@ class Exp1DataRecorder(DataRecorder):
         rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
         rcParams['axes.unicode_minus'] = False
 
-        plt.figure(figsize=(12, 8))
+        # 创建颜色映射
+        colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown']
 
-        # 子图1：合作率变化
-        plt.subplot(2, 2, 1)
-        plt.plot(self.records['coop_rate'], 'b-', linewidth=2, label='合作率')
-        plt.xlabel('仿真轮数')
-        plt.ylabel('合作率')
-        plt.title('合作率演化')
-        plt.grid(True, alpha=0.3)
-        plt.legend()
+        # 绘制多r值对比图表
+        # 创建2x2的子图布局
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        fig.suptitle('实验1：不同r值下的系统演化对比', fontsize=16)
 
-        # 子图2：攻击成功率变化
-        plt.subplot(2, 2, 2)
-        plt.plot(self.records['attack_success_rate'], 'r-', linewidth=2, label='攻击成功率')
-        plt.xlabel('仿真轮数')
-        plt.ylabel('攻击成功率')
-        plt.title('攻击成功率演化')
-        plt.grid(True, alpha=0.3)
-        plt.legend()
+        # 获取所有r值并排序
+        r_values = sorted(comparison_data.keys())
 
-        # 子图3：攻击概率（应该保持固定）
-        plt.subplot(2, 2, 3)
-        plt.plot(self.records['q_history'], 'g-', linewidth=2, label='攻击概率 q(t)')
-        plt.axhline(y=0.4, color='k', linestyle='--', alpha=0.7, label='理论值 q=0.4')
-        plt.xlabel('仿真轮数')
-        plt.ylabel('攻击概率')
-        plt.title('攻击概率演化（验证固定性）')
-        plt.grid(True, alpha=0.3)
-        plt.legend()
+        # 子图1：合作率演化
+        ax1 = axes[0, 0]
+        for i, r in enumerate(r_values):
+            recorder = comparison_data[r]
+            ax1.plot(recorder.records['coop_rate'], color=colors[i % len(colors)],
+                     linewidth=2, label=f'r={r}', alpha=0.8)
+        ax1.set_xlabel('仿真轮数')
+        ax1.set_ylabel('合作率')
+        ax1.set_title('合作率演化对比')
+        ax1.grid(True, alpha=0.3)
+        ax1.legend()
 
-        # 子图4：防御者平均收益
-        plt.subplot(2, 2, 4)
-        plt.plot(self.records['defender_payoff'], 'm-', linewidth=2, label='平均收益')
-        plt.xlabel('仿真轮数')
-        plt.ylabel('平均收益')
-        plt.title('防御者平均收益演化')
-        plt.grid(True, alpha=0.3)
-        plt.legend()
+        # 子图2：攻击成功率演化
+        ax2 = axes[0, 1]
+        for i, r in enumerate(r_values):
+            recorder = comparison_data[r]
+            ax2.plot(recorder.records['attack_success_rate'], color=colors[i % len(colors)],
+                     linewidth=2, label=f'r={r}', alpha=0.8)
+        ax2.set_xlabel('仿真轮数')
+        ax2.set_ylabel('攻击成功率')
+        ax2.set_title('攻击成功率演化对比')
+        ax2.grid(True, alpha=0.3)
+        ax2.legend()
+
+        # 子图3：防御者平均收益演化
+        ax3 = axes[1, 0]
+        for i, r in enumerate(r_values):
+            recorder = comparison_data[r]
+            ax3.plot(recorder.records['defender_payoff'], color=colors[i % len(colors)],
+                     linewidth=2, label=f'r={r}', alpha=0.8)
+        ax3.set_xlabel('仿真轮数')
+        ax3.set_ylabel('防御者平均收益')
+        ax3.set_title('防御者平均收益演化对比')
+        ax3.grid(True, alpha=0.3)
+        ax3.legend()
+
+        # 子图4：攻击者平均收益演化
+        ax4 = axes[1, 1]
+        for i, r in enumerate(r_values):
+            recorder = comparison_data[r]
+            ax4.plot(recorder.records['attacker_payoff'], color=colors[i % len(colors)],
+                     linewidth=2, label=f'r={r}', alpha=0.8)
+        ax4.set_xlabel('仿真轮数')
+        ax4.set_ylabel('攻击者平均收益')
+        ax4.set_title('攻击者平均收益演化对比')
+        ax4.grid(True, alpha=0.3)
+        ax4.legend()
 
         plt.tight_layout()
         plt.show()
@@ -181,7 +221,7 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
 
             # === 2. 防御者-攻击者博弈 (DAG) ===
             # 每个防御者面临固定攻击概率q的攻击
-            attack_success, total_attacks = 0, 0
+            attack_success, total_attacks, total_attacker_payoff = 0, 0, 0
             for d in self.defenders:
                 # 使用防御者的焦点组进行攻防博弈
                 focal_group = [d] + d.neighbors
@@ -189,6 +229,7 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
                 assert len(focal_group) == 5, f"小组规模应为5，当前为{len(focal_group)}"
                 dp, ap = self.dag.play(d, self.attacker, focal_group)
                 d.payoff += dp
+                total_attacker_payoff += ap
 
                 # 记录攻击成功率
                 if dp < 0:  # 攻击成功判定
@@ -215,12 +256,13 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
                     fermi_update(d, neighbor, self.K)
 
             # === 5. 数据记录 ===
-            # 计算并记录平均防御者收益
-            avg_payoff = sum(d.payoff for d in self.defenders) / len(self.defenders)
+            # 计算并记录平均防御者收益和攻击者收益
+            avg_defender_payoff = sum(d.payoff for d in self.defenders) / len(self.defenders)
+            avg_attacker_payoff = total_attacker_payoff / total_attacks if total_attacks > 0 else 0
             coop_rate = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
             attack_success_rate = attack_success / total_attacks if total_attacks > 0 else 0
 
-            recorder.record(coop_rate, attack_success_rate, self.attacker.q, avg_payoff)
+            recorder.record(coop_rate, attack_success_rate, self.attacker.q, avg_defender_payoff, avg_attacker_payoff)
 
             # === 6. 重置本轮收益 ===
             # 重置本轮收益
@@ -229,7 +271,8 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
 
             # 进度显示
             if (t + 1) % 500 == 0:
-                print(f"  第 {t+1}/{self.rounds} 轮: 合作率={coop_rate:.3f}, 攻击成功率={attack_success_rate:.3f}, 平均收益={avg_payoff:.2f}")
+                print(
+                    f"  第 {t + 1}/{self.rounds} 轮: 合作率={coop_rate:.3f}, 攻击成功率={attack_success_rate:.3f}, 防御者平均收益={avg_defender_payoff:.2f}, 攻击者平均收益={avg_attacker_payoff:.2f}")
 
         # 最终统计
         final_coop = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
@@ -245,7 +288,7 @@ def run_exp1():
     print("研究固定攻击概率对合作演化的影响")
 
     # 可以测试不同的r值来观察临界相变
-    test_r_values = [3.0]  # 系统性变化的增强因子
+    test_r_values = [3.0, 3.1]  # 系统性变化的增强因子
 
     for r in test_r_values:
         print(f"\n--- 测试 r={r} ---")
@@ -257,15 +300,83 @@ def run_exp1():
         final_coop = rec.records['coop_rate'][-1]
         final_attack_rate = rec.records['attack_success_rate'][-1]
         final_attacker_q = rec.records['q_history'][-1]
+        final_defender_payoff = rec.records['defender_payoff'][-1]
+        final_attacker_payoff = rec.records['attacker_payoff'][-1]
 
         print(f"最终结果:")
         print(f"  合作率: {final_coop:.3f}")
         print(f"  攻击成功率: {final_attack_rate:.3f}")
         print(f"  攻击者概率: {final_attacker_q:.3f}")
+        print(f"  防御者平均收益: {final_defender_payoff:.2f}")
+        print(f"  攻击者平均收益: {final_attacker_payoff:.2f}")
+
+
+def run_multiple_r_comparison():
+    """
+    运行多个r值对比实验
+    在4张子图中展示不同r值下各个指标的演化
+    """
+    print("=== 实验1：多r值对比分析 ===")
+    print("比较不同增强因子r对系统演化的影响")
+
+    # 测试多个r值
+    test_r_values = [2.8, 2.9, 3.0, 3.1]  # 可以调整这个列表
+
+    # 存储不同r值的记录器
+    recorders = {}
+    results = {}
+
+    # 运行每个r值的实验
+    for r in test_r_values:
+        print(f"\n--- 运行 r={r} 的实验 ---")
+        sim = NoFeedbackSimulation(r=r, q=0.4, rounds=2000)  # 使用较少轮数加快运行
+        rec = Exp1DataRecorder()
+        sim.run(rec)
+
+        # 存储记录器和结果
+        recorders[r] = rec
+        results[r] = {
+            'final_coop': rec.records['coop_rate'][-1],
+            'final_attack_rate': rec.records['attack_success_rate'][-1],
+            'final_defender_payoff': rec.records['defender_payoff'][-1],
+            'final_attacker_payoff': rec.records['attacker_payoff'][-1]
+        }
+
+        print(f"r={r} 实验完成!")
+
+    # 使用第一个记录器的plot方法来绘制对比图表
+    first_recorder = list(recorders.values())[0]
+    first_recorder.plot(comparison_data=recorders)
+
+    # 打印汇总结果
+    print("\n" + "="*60)
+    print("多r值实验结果汇总")
+    print("="*60)
+    print(f"{'r值':<8} {'最终合作率':<12} {'最终攻击成功率':<15} {'最终防御者收益':<15} {'最终攻击者收益':<15}")
+    print("-" * 65)
+
+    for r in test_r_values:
+        print(f"{r:<8.1f} {results[r]['final_coop']:<12.3f} {results[r]['final_attack_rate']:<15.3f} "
+              f"{results[r]['final_defender_payoff']:<15.2f} {results[r]['final_attacker_payoff']:<15.2f}")
+
+    print("="*60)
+
+    return results
 
 
 if __name__ == "__main__":
     import random
 
-    # 运行基本实验
-    run_exp1()
+    # 选择运行模式
+    print("请选择运行模式:")
+    print("1. 运行单个r值实验")
+    print("2. 运行多r值对比实验")
+
+    choice = input("请输入选择 (1 或 2): ").strip()
+
+    if choice == "2":
+        # 运行多r值对比实验
+        run_multiple_r_comparison()
+    else:
+        # 运行基本实验
+        run_exp1()
