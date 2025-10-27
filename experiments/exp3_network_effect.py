@@ -1,6 +1,6 @@
 # experiments/exp3_network_effect.py
 from core.simulation import CyberSecuritySimulation
-from core.recorder import DataRecorder
+from core.recorder import DefaultDataRecorder
 
 
 class NetworkEffectSimulation(CyberSecuritySimulation):
@@ -23,7 +23,7 @@ def run_exp3():
     for topo in topologies:
         print(f"Running topology: {topo}")
         sim = NetworkEffectSimulation(topo)
-        rec = DataRecorder()
+        rec = DefaultDataRecorder()
         sim.run(rec)
         rec.plot()
 

@@ -80,17 +80,18 @@ class DefenderAttackerGame:
         attack = attacker.should_attack()
 
         # 根据防御者所在的组的集体贡献决定防御者的投资概率
-        if focal_group is None:
-            # 如果没有提供防御者所在的组，使用个体策略（向后兼容）
-            invest = defender.strategy == 'C'
-        else:
-            # 计算防御者所在的组中的合作者数量
-            contributors = [d for d in focal_group if d.strategy == 'C']
-            investment_probability = len(contributors) / len(focal_group)
+        # if focal_group is None:
+        #     # 如果没有提供防御者所在的组，使用个体策略（向后兼容）
+        #     invest = defender.strategy == 'C'
+        # else:
+        #     # 计算防御者所在的组中的合作者数量
+        #     contributors = [d for d in focal_group if d.strategy == 'C']
+        #     investment_probability = len(contributors) / len(focal_group)
+        #
+        #     # 根据概率决定是否投资
+        #     invest = random.random() < investment_probability
 
-            # 根据概率决定是否投资
-            invest = random.random() < investment_probability
-
+        invest = defender.strategy == 'C'
         # 集体投资的回报和支出这一项在PublicGoodsGame类中单独计算，并在每次博弈后直接更新
         # 投资且被攻击
         if invest and attack:

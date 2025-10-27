@@ -1,6 +1,6 @@
 # experiments/exp2_with_feedback.py
 from core.simulation import CyberSecuritySimulation
-from core.recorder import DataRecorder
+from core.recorder import DefaultDataRecorder
 
 
 class WithFeedbackSimulation(CyberSecuritySimulation):
@@ -20,7 +20,7 @@ class WithFeedbackSimulation(CyberSecuritySimulation):
 
 def run_exp2():
     sim = WithFeedbackSimulation()
-    rec = DataRecorder()
+    rec = DefaultDataRecorder()
     sim.run(rec)
     rec.plot()
 

@@ -16,10 +16,85 @@
 - 运行参数：2000轮，确保达到稳定状态
 """
 
-import numpy as np
 from core.simulation import CyberSecuritySimulation
 from core.recorder import DataRecorder
 from core.evolution import fermi_update
+
+
+class Exp1DataRecorder(DataRecorder):
+    """
+    实验1专用数据记录器
+    ------------------
+    为无反馈机制实验定制的数据记录和可视化实现
+    """
+
+    def record(self, coop, attack, q, payoff):
+        """
+        记录当前轮的关键指标
+
+        Args:
+            coop (float): 合作率（合作节点数量 / 总节点数）
+            attack (float): 攻击成功率
+            q (float): 当前攻击概率 q(t)
+            payoff (float): 防御者总收益
+        """
+        self.records['coop_rate'].append(coop)
+        self.records['attack_success_rate'].append(attack)
+        self.records['q_history'].append(q)
+        self.records['defender_payoff'].append(payoff)
+
+    def plot(self):
+        """
+        绘制实验1结果曲线
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib import rcParams
+
+        # 设置中文字体
+        rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+        rcParams['axes.unicode_minus'] = False
+
+        plt.figure(figsize=(12, 8))
+
+        # 子图1：合作率变化
+        plt.subplot(2, 2, 1)
+        plt.plot(self.records['coop_rate'], 'b-', linewidth=2, label='合作率')
+        plt.xlabel('仿真轮数')
+        plt.ylabel('合作率')
+        plt.title('合作率演化')
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        # 子图2：攻击成功率变化
+        plt.subplot(2, 2, 2)
+        plt.plot(self.records['attack_success_rate'], 'r-', linewidth=2, label='攻击成功率')
+        plt.xlabel('仿真轮数')
+        plt.ylabel('攻击成功率')
+        plt.title('攻击成功率演化')
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        # 子图3：攻击概率（应该保持固定）
+        plt.subplot(2, 2, 3)
+        plt.plot(self.records['q_history'], 'g-', linewidth=2, label='攻击概率 q(t)')
+        plt.axhline(y=0.4, color='k', linestyle='--', alpha=0.7, label='理论值 q=0.4')
+        plt.xlabel('仿真轮数')
+        plt.ylabel('攻击概率')
+        plt.title('攻击概率演化（验证固定性）')
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        # 子图4：防御者平均收益
+        plt.subplot(2, 2, 4)
+        plt.plot(self.records['defender_payoff'], 'm-', linewidth=2, label='平均收益')
+        plt.xlabel('仿真轮数')
+        plt.ylabel('平均收益')
+        plt.title('防御者平均收益演化')
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        plt.tight_layout()
+        plt.show()
 
 
 class NoFeedbackSimulation(CyberSecuritySimulation):
@@ -170,12 +245,12 @@ def run_exp1():
     print("研究固定攻击概率对合作演化的影响")
 
     # 可以测试不同的r值来观察临界相变
-    test_r_values = [3.8]  # 系统性变化的增强因子
+    test_r_values = [3.0]  # 系统性变化的增强因子
 
     for r in test_r_values:
         print(f"\n--- 测试 r={r} ---")
         sim = NoFeedbackSimulation(r=r, q=0.4)
-        rec = DataRecorder()
+        rec = Exp1DataRecorder()
         sim.run(rec)
 
         # 打印最终结果

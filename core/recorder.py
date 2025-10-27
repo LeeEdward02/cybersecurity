@@ -5,6 +5,7 @@ recorder.py
 并提供可视化功能。
 """
 
+from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
@@ -13,7 +14,7 @@ rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
 rcParams['axes.unicode_minus'] = False
 
 
-class DataRecorder:
+class DataRecorder(ABC):
     """
     数据记录与可视化类
     -----------------
@@ -29,6 +30,38 @@ class DataRecorder:
                         'q_history': [],
                         'defender_payoff': [],
                         }
+
+    @abstractmethod
+    def record(self, coop, attack, q, payoff):
+        """
+        记录当前轮的关键指标。
+
+        Args:
+            coop (float): 合作率（合作节点数量 / 总节点数）
+            attack (float): 攻击成功率
+            q (float): 当前攻击概率 q(t)
+            payoff (float): 防御者总收益
+        Returns:
+            None
+        """
+        pass
+
+    @abstractmethod
+    def plot(self):
+        """
+        绘制实验结果曲线。
+        Returns:
+            None（直接展示图像）
+        """
+        pass
+
+
+class DefaultDataRecorder(DataRecorder):
+    """
+    默认数据记录实现
+    -----------------
+    提供基础的数据记录功能，用于向后兼容。
+    """
 
     def record(self, coop, attack, q, payoff):
         """
@@ -56,7 +89,7 @@ class DataRecorder:
         plt.figure(figsize=(10, 4))
         plt.subplot(1, 2, 1)
         plt.plot(self.records['coop_rate'], label='合作率')
-        plt.plot(self.records['attack_rate'], label='攻击成功率')
+        plt.plot(self.records['attack_success_rate'], label='攻击成功率')
         plt.legend()
         plt.subplot(1, 2, 2)
         plt.plot(self.records['q_history'], label='攻击概率 q(t)')
