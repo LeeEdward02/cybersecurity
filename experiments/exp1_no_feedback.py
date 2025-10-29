@@ -152,7 +152,7 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
     - r：系统性变化的公共物品增强因子
     """
 
-    def __init__(self, r=4.0, q=0.4, N=1600, rounds=4000, K=0.1):
+    def __init__(self, r=4.0, q=0.4, N=1600, rounds=4000, K=10):
         """
         初始化无反馈实验仿真
 
@@ -273,6 +273,9 @@ class NoFeedbackSimulation(CyberSecuritySimulation):
             if (t + 1) % 500 == 0:
                 print(
                     f"  第 {t + 1}/{self.rounds} 轮: 合作率={coop_rate:.3f}, 攻击成功率={attack_success_rate:.3f}, 防御者平均收益={avg_defender_payoff:.2f}, 攻击者平均收益={avg_attacker_payoff:.2f}")
+            if (t + 1) == 2:
+                print(
+                    f"  第 {t + 1}/{self.rounds} 轮: 合作率={coop_rate:.3f}, 攻击成功率={attack_success_rate:.3f}, 防御者平均收益={avg_defender_payoff:.2f}, 攻击者平均收益={avg_attacker_payoff:.2f}")
 
         # 最终统计
         final_coop = sum(d.strategy == 'C' for d in self.defenders) / len(self.defenders)
@@ -288,7 +291,7 @@ def run_exp1():
     print("研究固定攻击概率对合作演化的影响")
 
     # 可以测试不同的r值来观察临界相变
-    test_r_values = [3.0, 3.1]  # 系统性变化的增强因子
+    test_r_values = [3.0]  # 系统性变化的增强因子
 
     for r in test_r_values:
         print(f"\n--- 测试 r={r} ---")
@@ -349,9 +352,9 @@ def run_multiple_r_comparison():
     first_recorder.plot(comparison_data=recorders)
 
     # 打印汇总结果
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("多r值实验结果汇总")
-    print("="*60)
+    print("=" * 60)
     print(f"{'r值':<8} {'最终合作率':<12} {'最终攻击成功率':<15} {'最终防御者收益':<15} {'最终攻击者收益':<15}")
     print("-" * 65)
 
@@ -359,7 +362,7 @@ def run_multiple_r_comparison():
         print(f"{r:<8.1f} {results[r]['final_coop']:<12.3f} {results[r]['final_attack_rate']:<15.3f} "
               f"{results[r]['final_defender_payoff']:<15.2f} {results[r]['final_attacker_payoff']:<15.2f}")
 
-    print("="*60)
+    print("=" * 60)
 
     return results
 
