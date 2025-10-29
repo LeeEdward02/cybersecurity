@@ -1,5 +1,6 @@
 # main.py
-from experiments import exp1_no_feedback, exp2_with_feedback
+from experiments import exp2_with_feedback
+from experiments.exp1 import exp1_no_feedback
 
 if __name__ == "__main__":
     print("选择实验：1=无反馈，2=有反馈，3=网络拓扑效应")
