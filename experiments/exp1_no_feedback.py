@@ -15,6 +15,9 @@
 - 初始状态：50%合作者，50%叛逃者
 - 运行参数：2000轮，确保达到稳定状态
 """
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import random
 from core.simulation import CyberSecuritySimulation
